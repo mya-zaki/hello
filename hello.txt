@@ -1,0 +1,68 @@
+# 1. create docker machine
+
+## Docker Toolbox
+    https://www.docker.com/products/docker-toolbox
+
+## create docker machine
+    docker-machine create -d virtualbox hello
+    docker-machine ls
+
+## set env
+    docker-machine env hello | Invoke-Expression
+    ## eval "$(docker-machine env hello)"
+
+
+
+
+# 構築作業
+docker run -it centos:centos6 /bin/bash
+
+
+# 2. get images
+    cd C:\Users\ts-gota.a.miyazaki\Documents\docker\hello
+
+    docker load < mysqld_image.tar
+    docker load < redmine_image.tar
+    docker load < apache_image.tar
+    docker images
+
+
+# memo
+## create containers
+### web
+
+    cd C:\Users\ts-gota.a.miyazaki\Documents\docker\hello\web
+    docker build -t hello/web .
+    docker run --link  mysqld:hello/mysql --link  admin:hello/admin -e WEB_HOST=192.168.99.100 -p 8080:8080 -p 8090:8090 -v web_logs:/logs --name web -d hello/web
+
+    (docker exec -it web bash)
+
+### admin
+    cd C:\Users\ts-gota.a.miyazaki\Documents\docker\hello\admin
+    docker build -t hello/admin .
+    docker run -p 8888:8888 --name admin -v admin_logs:/logs -d hello/admin
+
+
+### MySQL
+
+ref) http://dqn.sakusakutto.jp/2015/10/docker_mysqld_tutorial.html
+
+    cd C:\Users\ts-gota.a.miyazaki\Documents\docker\hello\mysql
+
+    docker build -t hello/mysql .
+
+    docker run -p 3306:3306 --name mysqld -e MYSQL_DATABASE=hello -e MYSQL_USER=app -e MYSQL_PASSWORD=app -e MYSQL_ROOT_PASSWORD=secret -d hello/mysql
+
+#### client access
+    #docker run --link  mysqld:hello/mysql -it --rm mysql bash
+    docker run --link  mysqld:hello/mysql -it --rm mysql sh -c 'exec mysql -h"$MYSQL_PORT_3306_TCP_ADDR" -P"$MYSQL_PORT_3306_TCP_PORT" -uroot -p"$MYSQL_ENV_MYSQL_ROOT_PASSWORD"'
+
+
+## save images
+    docker commit web hello/web
+    docker commit admin hello/admin
+    docker commit mysqld hello/mysqld
+
+    docker save hello/web > ../web_image.tar
+    docker save hello/admin > ../admin_image.tar
+    docker save hello/mysqld > ../mysqld_image.tar
