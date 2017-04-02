@@ -22,10 +22,13 @@ docker run -it centos:centos6 /bin/bash
     cd C:\Users\ts-gota.a.miyazaki\Documents\docker\hello
 
     docker load < mysqld_image.tar
-    docker load < redmine_image.tar
-    docker load < apache_image.tar
+    docker load < admin_image.tar
+    docker load < web_image.tar
     docker images
 
+    docker run -p 3306:3306 --name mysqld -e MYSQL_DATABASE=hello -e MYSQL_USER=app -e MYSQL_PASSWORD=app -e MYSQL_ROOT_PASSWORD=secret -d hello/mysqld
+    docker run -p 8888:8888 --name admin -v admin_logs:/logs -d hello/admin
+    docker run --link  mysqld:hello/mysql --link  admin:hello/admin -e WEB_HOST=192.168.99.101 -p 8080:8080 -p 8090:8090 -v web_logs:/logs --name web -d hello/web
 
 # memo
 ## create containers
@@ -33,7 +36,7 @@ docker run -it centos:centos6 /bin/bash
 
     cd C:\Users\ts-gota.a.miyazaki\Documents\docker\hello\web
     docker build -t hello/web .
-    docker run --link  mysqld:hello/mysql --link  admin:hello/admin -e WEB_HOST=192.168.99.100 -p 8080:8080 -p 8090:8090 -v web_logs:/logs --name web -d hello/web
+    docker run --link  mysqld:hello/mysql --link  admin:hello/admin -e WEB_HOST=192.168.99.101 -p 8080:8080 -p 8090:8090 -v web_logs:/logs --name web -d hello/web
 
     (docker exec -it web bash)
 
@@ -63,6 +66,6 @@ ref) http://dqn.sakusakutto.jp/2015/10/docker_mysqld_tutorial.html
     docker commit admin hello/admin
     docker commit mysqld hello/mysqld
 
-    docker save hello/web > ../web_image.tar
-    docker save hello/admin > ../admin_image.tar
-    docker save hello/mysqld > ../mysqld_image.tar
+    docker save hello/web > web_image.tar
+    docker save hello/admin > admin_image.tar
+    docker save hello/mysqld > mysqld_image.tar
