@@ -1,0 +1,37 @@
+version: "3"
+services:
+  mysql:
+    image: hello/mysql
+    container_name: mysql
+    environment:
+      MYSQL_DATABASE: hello
+      MYSQL_USER: app
+      MYSQL_PASSWORD: app
+      MYSQL_ROOT_PASSWORD: secret
+    ports:
+      - "3306:3306"
+  admin:
+    image: hello/admin
+    container_name: admin
+    volumes:
+      - ./admin_logs:/logs
+    ports:
+      - "8888:8888"
+  web:
+    image: hello/web
+    container_name: web
+    volumes:
+      - ./web_logs:/logs
+    environment:
+      WEB_HOST: "192.168.99.100"
+      MYSQL_PORT_3306_TCP_ADDR: "mysql"
+      ADMIN_PORT_8888_TCP_ADDR: "admin"
+    ports:
+      - "8080:8080"
+      - "8090:8090"
+    links:
+      - mysql
+      - admin
+    depends_on:
+      - mysql
+      - admin
